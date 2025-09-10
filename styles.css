@@ -660,3 +660,162 @@ footer {
   font-size: 14px;
   color: #333;
 }
+/* ---------- Glowing search bar (namespaced) ---------- */
+/* Append this block to the end of styles.css */
+
+.glow-search {
+  --input-h: 56px;
+  --radius: 10px;
+  --input-padding-left: 48px;
+  --input-padding-right: 12px;
+  --max-w: 700px; /* adjust maximum width of the search area inside header */
+  width: 100%;
+  max-width: var(--max-w);
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+  padding: 0.25rem 0;
+  box-sizing: border-box;
+}
+
+/* Decorative frames (glow layers) */
+.glow-search__glow,
+.glow-search__border,
+.glow-search__white {
+  position: absolute;
+  inset: 0;
+  border-radius: calc(var(--radius) + 6px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Subtle multi-color glow behind input */
+.glow-search__glow {
+  filter: blur(30px);
+  opacity: 0.35;
+  background-image: conic-gradient(#000, #402fb5 5%, #000 38%, #cf30aa 60%, #000 87%);
+  transform: rotate(60deg);
+}
+
+/* dark slanted border */
+.glow-search__border {
+  filter: blur(1px);
+  background-image: conic-gradient(#1c191c, #402fb5 5%, #1c191c 14%, #cf30aa 60%, #1c191c 64%);
+  transform: rotate(70deg);
+}
+
+/* pale highlight */
+.glow-search__white {
+  filter: blur(2px);
+  background-image: conic-gradient(rgba(0,0,0,0), #a099d8, rgba(0,0,0,0) 8%, #dfa2da 58%);
+  transform: rotate(83deg);
+}
+
+/* Main input container (higher z-index to overlay decorative frames) */
+.glow-search__main {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-sizing: border-box;
+}
+
+/* The input itself - keep appearance consistent with your header */
+.glow-search__input {
+  width: 100%;
+  height: var(--input-h);
+  border-radius: var(--radius);
+  padding: 0 12px 0 calc(var(--input-padding-left));
+  font-size: 1rem;
+  border: none;
+  outline: none;
+  color: inherit;
+  background-color: #010201; /* dark field to match glow */
+  box-shadow: 0 1px 0 rgba(255,255,255,0.02) inset;
+  transition: box-shadow 0.2s ease, outline 0.12s ease;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Focus state */
+.glow-search__input:focus {
+  outline: 2px solid rgba(99,86,216,0.45);
+  box-shadow: 0 6px 30px rgba(67,52,160,0.16);
+}
+
+/* Placeholder color */
+.glow-search__input::placeholder {
+  color: #c0b9c0;
+  opacity: 1;
+}
+
+/* small decorative masks (optional, purely visual) */
+.glow-search__input-mask {
+  pointer-events: none;
+  width: 120px;
+  height: 22px;
+  position: absolute;
+  background: linear-gradient(90deg, transparent, rgba(0,0,0,0.6));
+  top: 50%;
+  left: 84px;
+  transform: translateY(-50%);
+  z-index: 4;
+}
+.glow-search__pink-mask {
+  pointer-events: none;
+  width: 40px;
+  height: 22px;
+  position: absolute;
+  background: #cf30aa;
+  top: 50%;
+  left: 10px;
+  transform: translateY(-50%);
+  filter: blur(18px);
+  opacity: 0.8;
+  z-index: 2;
+  transition: opacity 0.35s ease;
+}
+.glow-search__main:hover > .glow-search__pink-mask { opacity: 0; }
+
+/* Search icon positioned on the left */
+.glow-search__icon {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  color: #d6d6e6;
+}
+
+/* If you want a smaller icon on very small screens */
+@media (max-width: 520px) {
+  .glow-search__icon { left: 12px; }
+  .glow-search__input { padding-left: calc(var(--input-padding-left) - 10px); }
+}
+
+/* Keep your header's search button look but align it with the new input */
+.glow-search__action {
+  height: var(--input-h);
+  border-radius: var(--radius);
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  z-index: 6;
+  margin-left: 6px;
+}
+
+/* Ensure we don't break smaller header layouts */
+@media (max-width: 1024px) {
+  .glow-search { max-width: 100%; }
+  .glow-search__action { padding: 0 10px; }
+}
