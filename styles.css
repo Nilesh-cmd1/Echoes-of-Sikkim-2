@@ -819,3 +819,26 @@ footer {
   .glow-search { max-width: 100%; }
   .glow-search__action { padding: 0 10px; }
 }
+
+/* ---------- Chatbox stacking & small layout tweaks (appended) ---------- */
+/* This ensures the static #chatbot sits above maps/pano/minimap */
+#chatbot.chat-box {
+  z-index: 6000; /* higher than other interactive elements */
+  right: 1.5rem;
+  bottom: 1.5rem;
+  max-width: 720px;
+  width: calc(100% - 3rem);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+
+/* Ensure messages area reads well */
+#chatbot .chat-messages {
+  background: #fff;
+  color: #111;
+}
+
+/* Small-screen adjustments for the chatbox */
+@media (max-width: 520px) {
+  #chatbot { right: 0.5rem; left: 0.5rem; width: auto; }
+  #chatbot .chat-input-wrap { padding: 8px; }
+}
