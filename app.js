@@ -1,11 +1,10 @@
-/* Final cleaned app.js
-   - Fixed template issues
-   - Added defaultImages fallback (provided)
-   - Replaced buildSlideshow to use fallbacks
-   - Ensures static #chatbot handlers are used
+/* Final app.js (no API key required - uses embed iframe for map when Maps JS not available)
+   - slideshow uses provided fallback images when monastery images are missing
+   - chat uses /api/chatbot (backend optional)
+   - map will be an embedded Google Maps iframe centered on Sikkim if Google Maps JS isn't loaded
 */
 
-let map, pano, markers = [], monasteries = [], nearbyMarkersMap = {}, currentMon = null;
+let map = null, pano = null, markers = [], monasteries = [], nearbyMarkersMap = {}, currentMon = null;
 const lang = localStorage.getItem('lang') || 'en';
 
 async function tLoad() {
@@ -18,7 +17,6 @@ async function tLoad() {
 }
 let translations = {};
 
-// Fallback images (provided by your friend) — used when a monastery has no images
 const defaultImages = [
   "https://upload.wikimedia.org/wikipedia/commons/a/af/Phodong_monastery_-_north_sikkim.jpg",
   "https://www.tourmyindia.com/states/sikkim/images/pemayangtse-monastery1.jpg",
@@ -34,35 +32,63 @@ const defaultImages = [
 tLoad().then(j => translations = j);
 function t(k, d) { return translations[k] || d || k; }
 
-async function fetchKey() {
-  const r = await fetch('/api/config/maps-key').catch(() => null);
-  if (!r) return null;
-  const j = await r.json();
-  return j.key || null;
-}
-
-async function loadMaps(key) {
-  const s = document.createElement('script');
-  s.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places`;
-  s.async = true;
-  s.onload = init;
-  document.head.appendChild(s);
-}
-
-async function init() {
-  const key = await fetchKey();
-  if (!key) { alert('Set GOOGLE_MAPS_API_KEY in backend .env'); return; }
-  loadMaps(key);
-}
-
 async function fetchMonasteries(q = '') {
   const url = q ? `/api/monasteries?q=${encodeURIComponent(q)}` : '/api/monasteries';
-  const r = await fetch(url);
-  const j = await r.json();
-  monasteries = j;
+  try {
+    const r = await fetch(url);
+    const j = await r.json();
+    monasteries = Array.isArray(j) ? j : (j.items || []);
+  } catch (e) {
+    monasteries = []; // fallback empty
+  }
   renderList();
   plotMarkers();
   buildSlideshow();
+}
+
+/* MAP: if Google Maps JS not present we embed an iframe centered on Sikkim */
+function ensureMapEmbed() {
+  const mapEl = document.getElementById('map');
+  if (!mapEl) return;
+  // If Google Maps JS is available and map already initialized, do nothing
+  if (window.google && window.google.maps && map) return;
+  // Insert an embedded Google Maps iframe centered on Sikkim (no API key required)
+  // Zoom default to 8 to show region
+  mapEl.innerHTML = '';
+  const iframe = document.createElement('iframe');
+  iframe.width = '100%';
+  iframe.height = '100%';
+  iframe.style.border = 0;
+  iframe.loading = 'lazy';
+  iframe.referrerPolicy = 'no-referrer-when-downgrade';
+  iframe.src = 'https://www.google.com/maps?q=Sikkim,India&z=8&output=embed';
+  mapEl.appendChild(iframe);
+}
+
+/* plotMarkers and other google.maps functions are guarded — they will no-op if google.maps isn't available */
+function plotMarkers() {
+  // If the Google Maps JS API is not loaded, skip marker plotting (map is iframe)
+  if (!window.google || !window.google.maps) return;
+  if (!map) {
+    // initialize a simple map centered on Sikkim if available
+    map = new google.maps.Map(document.getElementById('map'), { center: { lat: 27.533, lng: 88.512 }, zoom: 8 });
+  }
+  markers.forEach(m => m.setMap(null));
+  markers = [];
+  monasteries.forEach((m, i) => {
+    if (!m || typeof m.latitude !== 'number' || typeof m.longitude !== 'number') return;
+    const marker = new google.maps.Marker({
+      map,
+      position: { lat: m.latitude, lng: m.longitude },
+      title: m.name || ''
+    });
+    marker.addListener('click', () => {
+      renderDetails(m);
+      showStreetView(m);
+      currentMon = m;
+    });
+    markers.push(marker);
+  });
 }
 
 function renderList() {
@@ -84,33 +110,16 @@ function focusMonastery(i) {
   const m = monasteries[i];
   if (!m) return;
   currentMon = m;
-  if (map && typeof map.panTo === 'function') {
+  if (window.google && window.google.maps && map && typeof map.panTo === 'function') {
     map.panTo({ lat: m.latitude, lng: m.longitude });
     map.setZoom(14);
+  } else {
+    // If embed iframe used, just scroll details into view
+    document.getElementById('details')?.scrollIntoView({ behavior: 'smooth' });
   }
-  if (markers[i]) google.maps.event.trigger(markers[i], 'click');
-  showStreetView(m);
   renderDetails(m);
+  showStreetView(m);
   initMiniMap(m);
-}
-
-function plotMarkers() {
-  if (!window.google || !window.google.maps) return;
-  markers.forEach(x => x.setMap(null));
-  markers = [];
-  monasteries.forEach((m, i) => {
-    const marker = new google.maps.Marker({
-      map,
-      position: { lat: m.latitude, lng: m.longitude },
-      title: m.name
-    });
-    marker.addListener('click', () => {
-      renderDetails(m);
-      showStreetView(m);
-      currentMon = m;
-    });
-    markers.push(marker);
-  });
 }
 
 function renderDetails(m) {
@@ -127,15 +136,14 @@ function renderDetails(m) {
 }
 
 function showStreetView(m) {
-  if (!window.google || !window.google.maps) return;
+  // Street View requires Google Maps JS; if absent, hide or skip
+  if (!window.google || !window.google.maps) {
+    // nothing to show; keep pannellum / fallback images for panoramas
+    return;
+  }
   if (!pano) {
-    // If there's a #pano element, create a StreetViewPanorama there. If not, skip.
     const panoEl = document.getElementById('pano') || document.getElementById('pannellum-container');
-    if (panoEl) {
-      pano = new google.maps.StreetViewPanorama(panoEl, { visible: false });
-    } else {
-      return;
-    }
+    if (panoEl) pano = new google.maps.StreetViewPanorama(panoEl, { visible: false });
   }
   const svs = new google.maps.StreetViewService();
   const latLng = { lat: m.latitude, lng: m.longitude };
@@ -151,7 +159,6 @@ function showStreetView(m) {
   });
 }
 
-// --- Updated slideshow: uses monastery image if present, otherwise defaultImages ---
 function buildSlideshow() {
   const slidesEl = document.getElementById('slides');
   if (!slidesEl) return;
@@ -188,7 +195,7 @@ function buildSlideshow() {
 }
 
 function showDetails(id) {
-  fetch('/api/monasteries/' + id).then(r => r.json()).then(m => { currentMon = m; renderDetails(m); showStreetView(m); initMiniMap(m); });
+  fetch('/api/monasteries/' + id).then(r => r.json()).then(m => { currentMon = m; renderDetails(m); showStreetView(m); initMiniMap(m); }).catch(()=>{});
 }
 
 function openTour() {
@@ -231,7 +238,7 @@ async function downloadTour() {
       const b = await r.blob();
       try { await idbPut('assets', { key: 'asset:' + url, url, blob: b }); } catch (e) {}
       try { const cache = await caches.open('echoes-cache-v4'); await cache.add(url); } catch (e) {}
-    } catch (e) { /* ignore */ }
+    } catch (e) {}
   }
   alert('Saved for offline');
 }
@@ -362,7 +369,7 @@ async function syncRoutes() {
     for (const rt of list) {
       await idbPut('routes', { id: `route:${rt.monastery._id}:${rt.origin?.lat?.toFixed?.(3) || 0},${rt.origin?.lng?.toFixed?.(3) || 0}`, monastery: rt.monastery._id, origin: rt.origin, steps: rt.steps });
     }
-  } catch (e) { /* ignore */ }
+  } catch (e) {}
 }
 
 function initMiniMap(monastery) {
@@ -380,16 +387,32 @@ function initMiniMap(monastery) {
   }
   function load() {
     wrap.style.display = 'block';
-    const mini = new google.maps.Map(document.getElementById('minimap'), { center: { lat: monastery.latitude, lng: monastery.longitude }, zoom: 13, disableDefaultUI: true });
-    new google.maps.Marker({ position: { lat: monastery.latitude, lng: monastery.longitude }, map: mini });
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(pos => {
-        new google.maps.Marker({
-          position: { lat: pos.coords.latitude, lng: pos.coords.longitude },
-          map: mini,
-          icon: { path: google.maps.SymbolPath.CIRCLE, scale: 6, fillColor: '#f00', fillOpacity: 1, strokeColor: '#fff' }
+    // If google.maps is available, use it, otherwise embed a focused iframe for the monastery
+    if (window.google && window.google.maps) {
+      const mini = new google.maps.Map(document.getElementById('minimap'), { center: { lat: monastery.latitude, lng: monastery.longitude }, zoom: 13, disableDefaultUI: true });
+      new google.maps.Marker({ position: { lat: monastery.latitude, lng: monastery.longitude }, map: mini });
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+          new google.maps.Marker({
+            position: { lat: pos.coords.latitude, lng: pos.coords.longitude },
+            map: mini,
+            icon: { path: google.maps.SymbolPath.CIRCLE, scale: 6, fillColor: '#f00', fillOpacity: 1, strokeColor: '#fff' }
+          });
         });
-      });
+      }
+    } else {
+      // embed simple iframe focused on monastery coordinates (approx)
+      const mm = document.getElementById('minimap');
+      mm.innerHTML = '';
+      const iframe = document.createElement('iframe');
+      iframe.width = '100%';
+      iframe.height = '100%';
+      iframe.style.border = 0;
+      iframe.loading = 'lazy';
+      iframe.referrerPolicy = 'no-referrer-when-downgrade';
+      const q = encodeURIComponent((monastery.name || 'Sikkim') + ' ' + (monastery.latitude || '') + ',' + (monastery.longitude || ''));
+      iframe.src = `https://www.google.com/maps?q=${q}&z=13&output=embed`;
+      mm.appendChild(iframe);
     }
   }
   if (localStorage.getItem('miniMap') === 'true') load(); else wrap.style.display = 'none';
@@ -420,7 +443,7 @@ function initMiniMap(monastery) {
   }
 }
 
-/* ---------------- Chat handlers (use static #chatbot) ---------------- */
+/* ---------------- Chat handlers bound to static #chatbot HTML ---------------- */
 
 function setupChatHandlers() {
   const topSearchBtn = document.getElementById('topSearchBtn');
@@ -488,11 +511,10 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"'`]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;' }[c]));
 }
 
-/* Initialize chat handlers early and also on window load to be safe */
-setupChatHandlers();
-
+/* Initialize - ensure map embed if no maps lib, then load data */
 window.addEventListener('load', () => {
-  fetchMonasteries();
-  syncRoutes();
-  setupChatHandlers();
+  ensureMapEmbed();      // insert embedded Sikkim map if google maps lib is not present
+  fetchMonasteries();    // populate slideshow/list
+  syncRoutes();          // try to load any routes
+  setupChatHandlers();   // wire chat
 });
