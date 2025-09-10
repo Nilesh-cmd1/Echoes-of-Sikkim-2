@@ -5,16 +5,28 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Echoes of Sikkim</title>
+
+  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <!-- Manifest -->
   <link rel="manifest" href="./manifest.json">
+
+  <!-- Styles -->
   <link rel="stylesheet" href="./styles.css">
+
+  <!-- Razorpay -->
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+  <!-- Pannellum CDN (required for panorama viewer) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css">
+  <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
 </head>
 <body>
   <div class="app">
     <header class="main-header">
       <div class="left">
-        <img src="./assets/logo.png" alt="logo" style="height:40px">
+        <img src="./assets/logo.png" alt="logo">
       </div>
       <div class="center">
         <input id="topSearch" type="search" placeholder="Search monasteries, history, tours..." class="top-search">
@@ -37,13 +49,13 @@
     <main>
       <aside id="list"></aside>
       <section class="map-wrap">
-        <div id="map"></div>
-        <div id="pano" style="position:relative;height:420px;">
-          <div id="pannellum-container" style="width:100%;height:100%;"></div>
+        <div id="map">Map Placeholder</div>
+        <div id="pano">
+          <div id="pannellum-container">Panorama Placeholder</div>
         </div>
         <div id="details" class="details"></div>
 
-        <div id="panoActions" style="position:absolute;right:18px;top:18px;z-index:50">
+        <div id="panoActions">
           <button id="openTourBtn" class="animated-card">Open Tour</button>
           <button id="downloadTourBtn" class="animated-card">Download Tour</button>
           <button id="storyBtn" class="animated-card">Story Mode</button>
@@ -51,39 +63,41 @@
           <button id="offlineNavBtn" class="animated-card">Start Offline Nav</button>
         </div>
 
-        <div id="minimap-wrap" style="position:absolute; top:12px; right:12px; width:200px; height:200px; border:2px solid #2563eb; border-radius:8px; box-shadow:0 6px 20px rgba(0,0,0,.2); z-index:999; display:none; resize:both; overflow:hidden; cursor:move;">
-          <div id="minimap" style="width:100%; height:100%;"></div>
+        <div id="minimap-wrap">
+          <div id="minimap">Mini Map</div>
         </div>
-        <button id="minimap-toggle" style="position:absolute; top:220px; right:12px; z-index:1000; background:#2563eb; color:#fff; border:none; border-radius:50%; width:42px; height:42px; box-shadow:0 6px 16px rgba(0,0,0,.3); cursor:pointer; font-size:20px;">⚙</button>
+        <button id="minimap-toggle">⚙</button>
       </section>
     </main>
 
     <footer><p>Prototype. Data is illustrative.</p></footer>
 
     <!-- Chat popup container -->
-    <div id="chatbot" class="chat-box" style="display:none;">
-      <div style="padding:12px; font-weight:bold; background:#2563eb; color:#fff; border-top-left-radius:8px;border-top-right-radius:8px;">
+    <div id="chatbot" class="chat-box hidden">
+      <div>
         Chat
-        <button onclick="document.getElementById('chatbot').style.display='none'" style="float:right;background:none;border:none;color:#fff;font-size:16px;cursor:pointer;">×</button>
+        <button id="chatClose">×</button>
       </div>
-      <div style="padding:12px; max-height:300px; overflow-y:auto;">
+      <div>
         <p>Hi! This is the chat window. You can style and script me in app.js</p>
       </div>
     </div>
-    <!-- /Chat popup container -->
-
   </div>
 
+  <!-- Scripts -->
   <script src="./assets/libs/pannellum-loader.js"></script>
   <script src="./app.js"></script>
   <script>
     if('serviceWorker' in navigator){
-      navigator.serviceWorker.register('./service-worker.js');
+      navigator.serviceWorker.register('/Echoes-of-Sikkim-2/service-worker.js');
     }
 
-    // open chat when clicking button
+    // Chat open/close
     document.getElementById('chatOpen').addEventListener('click', () => {
-      document.getElementById('chatbot').style.display = 'block';
+      document.getElementById('chatbot').classList.remove('hidden');
+    });
+    document.getElementById('chatClose').addEventListener('click', () => {
+      document.getElementById('chatbot').classList.add('hidden');
     });
   </script>
 </body>
