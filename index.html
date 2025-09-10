@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-<head>  
+<head>
   <base href="/Echoes-of-Sikkim-2/">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -29,20 +29,16 @@
         <img src="./assets/logo.png" alt="logo">
       </div>
 
-      <!-- CENTER: replaced with glowing search bar -->
+      <!-- CENTER: glowing search bar -->
       <div class="center">
-        <!-- Glowing search bar (namespaced to avoid conflicts) -->
         <div class="glow-search">
-          <!-- layered frames for visual glow (purely decorative) -->
           <div class="glow-search__glow" aria-hidden="true"></div>
           <div class="glow-search__border" aria-hidden="true"></div>
           <div class="glow-search__white" aria-hidden="true"></div>
 
-          <!-- main search control - input keeps original id for JS compatibility -->
           <div class="glow-search__main" role="search">
             <label for="topSearch" class="visually-hidden">Search</label>
 
-            <!-- Input (preserves id topSearch) -->
             <input
               id="topSearch"
               name="text"
@@ -53,11 +49,9 @@
               aria-label="Search"
             />
 
-            <!-- decorative masks (optional visual) -->
             <div class="glow-search__input-mask" aria-hidden="true"></div>
             <div class="glow-search__pink-mask" aria-hidden="true"></div>
 
-            <!-- search icon -->
             <div class="glow-search__icon" aria-hidden="true">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -66,7 +60,6 @@
               </svg>
             </div>
 
-            <!-- filter button / search button (keeps your existing search button behavior) -->
             <button id="topSearchBtn" class="glow-search__action btn" type="button">Search</button>
           </div>
         </div>
@@ -131,14 +124,13 @@
   </div>
 
   <!-- Scripts -->
-  <script src="./assets/libs/pannellum-loader.js"></script>
   <script src="./app.js"></script>
   <script>
     if('serviceWorker' in navigator){
       navigator.serviceWorker.register('/Echoes-of-Sikkim-2/service-worker.js');
     }
 
-    // Chat open/close (these still work with updated chatbot structure)
+    // Chat open/close (still works)
     document.getElementById('chatOpen').addEventListener('click', () => {
       document.getElementById('chatbot').classList.remove('hidden');
       document.getElementById('chatbot').setAttribute('aria-hidden', 'false');
