@@ -1,4 +1,10 @@
-/* --- START ENTIRE app.js (replace your existing file with this) --- */
+/* Final cleaned app.js
+   - Fixed template issues
+   - Added defaultImages fallback (provided)
+   - Replaced buildSlideshow to use fallbacks
+   - Ensures static #chatbot handlers are used
+*/
+
 let map, pano, markers = [], monasteries = [], nearbyMarkersMap = {}, currentMon = null;
 const lang = localStorage.getItem('lang') || 'en';
 
@@ -11,6 +17,20 @@ async function tLoad() {
   }
 }
 let translations = {};
+
+// Fallback images (provided by your friend) — used when a monastery has no images
+const defaultImages = [
+  "https://upload.wikimedia.org/wikipedia/commons/a/af/Phodong_monastery_-_north_sikkim.jpg",
+  "https://www.tourmyindia.com/states/sikkim/images/pemayangtse-monastery1.jpg",
+  "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Phensong_Monastery.jpg/1280px-Phensong_Monastery.jpg",
+  "https://upload.wikimedia.org/wikipedia/commons/7/7f/Kathog_Monastery_alias_Kartok_Monastery_at_Pakyong_in_East_Sikkim.jpg",
+  "https://vushii.com/uploads/633916600_Sinon%20Monastery.jpg",
+  "https://sikkimtourism.org/wp-content/uploads/2022/04/Gonjang-Monastery-700x500.jpg",
+  "https://www.omastrology.com/indian-monasteries/images/hee-gyathang-monastery.jpg",
+  "https://www.trawell.in/admin/images/upload/288555281Namchi_Ngadak_Monastery_Main.jpg",
+  "https://thumbs.dreamstime.com/b/chawayng-ani-monastery-buddhist-monastery-chawayng-ani-monastery-buddhist-monastery-sikkim-392589286.jpg"
+];
+
 tLoad().then(j => translations = j);
 function t(k, d) { return translations[k] || d || k; }
 
@@ -20,6 +40,7 @@ async function fetchKey() {
   const j = await r.json();
   return j.key || null;
 }
+
 async function loadMaps(key) {
   const s = document.createElement('script');
   s.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places`;
@@ -27,6 +48,7 @@ async function loadMaps(key) {
   s.onload = init;
   document.head.appendChild(s);
 }
+
 async function init() {
   const key = await fetchKey();
   if (!key) { alert('Set GOOGLE_MAPS_API_KEY in backend .env'); return; }
@@ -51,7 +73,7 @@ function renderList() {
     const d = document.createElement('div');
     d.className = 'item';
     d.dataset.index = i;
-    const name = (m.translations || []).find(x => x.lang === lang)?.name || m.name;
+    const name = (m.translations || []).find(x => x.lang === lang)?.name || m.name || 'Monastery';
     d.innerHTML = `<div><div class='name'>${escapeHtml(name)}</div><div>${escapeHtml(m.description || '')}</div></div>`;
     d.onclick = () => focusMonastery(i);
     el.appendChild(d);
@@ -94,7 +116,7 @@ function plotMarkers() {
 function renderDetails(m) {
   const el = document.getElementById('details');
   if (!el) return;
-  const name = (m.translations || []).find(x => x.lang === lang)?.name || m.name;
+  const name = (m.translations || []).find(x => x.lang === lang)?.name || m.name || 'Monastery';
   const body = (m.translations || []).find(x => x.lang === lang)?.history || m.history || m.description || '';
   el.innerHTML = `<h2>${escapeHtml(name)}</h2><p>${escapeHtml(body)}</p>
     <div>
@@ -107,7 +129,13 @@ function renderDetails(m) {
 function showStreetView(m) {
   if (!window.google || !window.google.maps) return;
   if (!pano) {
-    pano = new google.maps.StreetViewPanorama(document.getElementById('pano') || document.body, { visible: false });
+    // If there's a #pano element, create a StreetViewPanorama there. If not, skip.
+    const panoEl = document.getElementById('pano') || document.getElementById('pannellum-container');
+    if (panoEl) {
+      pano = new google.maps.StreetViewPanorama(panoEl, { visible: false });
+    } else {
+      return;
+    }
   }
   const svs = new google.maps.StreetViewService();
   const latLng = { lat: m.latitude, lng: m.longitude };
@@ -123,58 +151,73 @@ function showStreetView(m) {
   });
 }
 
+// --- Updated slideshow: uses monastery image if present, otherwise defaultImages ---
 function buildSlideshow() {
   const slidesEl = document.getElementById('slides');
   if (!slidesEl) return;
-  slidesEl.innerHTML = monasteries.map(m => {
-    const bg = m.images?.[0] || '/assets/rumtek1.jpg';
-    const name = (m.translations || []).find(x => x.lang === lang)?.name || m.name;
-    return `<div class="slide" style="background-image:url('${escapeHtml(bg)}')">
-      <div class="meta"><h3>${escapeHtml(name)}</h3>
-      <div><button onclick="showDetails('${escapeHtml(m._id)}')">${t('details','Details')}</button></div></div></div>`;
+
+  slidesEl.innerHTML = monasteries.map((m, idx) => {
+    const src = (m.images && m.images.length && m.images[0]) ? m.images[0] : (defaultImages[idx % defaultImages.length] || '/assets/rumtek1.jpg');
+    const name = (m.translations || []).find(x => x.lang === lang)?.name || m.name || 'Monastery';
+    return `<div class="slide" style="background-image:url('${escapeHtml(src)}')">
+      <div class="meta">
+        <h3>${escapeHtml(name)}</h3>
+        <div><button onclick="showDetails('${escapeHtml(m._id || '')}')">${t('details','Details')}</button></div>
+      </div>
+    </div>`;
   }).join('');
+
   let idx = 0;
-  const len = Math.max(1, monasteries.length);
+  const len = Math.max(1, slidesEl.children.length);
   const setTransform = () => slidesEl.style.transform = `translateX(${(-idx * 100)}%)`;
-  const prev = document.getElementById('prevSlide');
-  const next = document.getElementById('nextSlide');
-  if (prev) prev.onclick = () => { idx = (idx - 1 + len) % len; setTransform(); };
-  if (next) next.onclick = () => { idx = (idx + 1) % len; setTransform(); };
-  setInterval(() => { idx = (idx + 1) % len; setTransform(); }, 5000);
+
+  const prevBtn = document.getElementById('prevSlide');
+  const nextBtn = document.getElementById('nextSlide');
+  if (prevBtn) prevBtn.onclick = () => { idx = (idx - 1 + len) % len; setTransform(); };
+  if (nextBtn) nextBtn.onclick = () => { idx = (idx + 1) % len; setTransform(); };
+
+  if (len > 1) {
+    if (window._echoesSlideshowInterval) clearInterval(window._echoesSlideshowInterval);
+    window._echoesSlideshowInterval = setInterval(() => {
+      idx = (idx + 1) % len;
+      setTransform();
+    }, 5000);
+  } else {
+    if (window._echoesSlideshowInterval) { clearInterval(window._echoesSlideshowInterval); window._echoesSlideshowInterval = null; }
+  }
 }
 
 function showDetails(id) {
-  fetch('/api/monasteries/' + id).then(r => r.json()).then(m => {
-    currentMon = m; renderDetails(m); showStreetView(m); initMiniMap(m);
-  });
+  fetch('/api/monasteries/' + id).then(r => r.json()).then(m => { currentMon = m; renderDetails(m); showStreetView(m); initMiniMap(m); });
 }
 
 function openTour() {
   if (!currentMon) return alert('Select a monastery');
   const panoContainer = document.getElementById('pannellum-container');
-  if (window.pannellum && typeof pannellum.viewer === 'function') {
+  const fallback = (currentMon.panoramas && currentMon.panoramas[0]) || (currentMon.images && currentMon.images[0]) || defaultImages[0] || '/assets/rumtek1.jpg';
+  if (window.pannellum && typeof pannellum.viewer === 'function' && panoContainer) {
     try {
       if (window.currentPano && typeof window.currentPano.destroy === 'function') window.currentPano.destroy();
       window.currentPano = pannellum.viewer('pannellum-container', {
         type: 'equirectangular',
-        panorama: currentMon.panoramas?.[0] || currentMon.images?.[0] || '/assets/rumtek1.jpg',
+        panorama: currentMon.panoramas?.[0] || currentMon.images?.[0] || fallback,
         autoLoad: true,
         showControls: true,
         hotSpots: (currentMon.hotspots || []).map(h => ({
           pitch: h.pitch || 0,
           yaw: h.yaw || 0,
           cssClass: 'pn-hotspot',
-          createTooltipFunc: function(hs, el) {
+          createTooltipFunc: function (hs, el) {
             el.innerHTML = '<div style="padding:6px;font-size:13px">' + escapeHtml(h.label || h.text || 'Info') + '</div>';
           },
           createTooltipArgs: [h.label || h.text || 'info']
         }))
       });
     } catch (e) {
-      if (panoContainer) panoContainer.innerHTML = `<img src="${escapeHtml(currentMon.panoramas?.[0] || currentMon.images?.[0] || '/assets/rumtek1.jpg')}" style="width:100%"/>`;
+      if (panoContainer) panoContainer.innerHTML = `<img src="${escapeHtml(fallback)}" style="width:100%"/>`;
     }
   } else {
-    if (panoContainer) panoContainer.innerHTML = `<img src="${escapeHtml(currentMon.panoramas?.[0] || currentMon.images?.[0] || '/assets/rumtek1.jpg')}" style="width:100%"/>`;
+    if (panoContainer) panoContainer.innerHTML = `<img src="${escapeHtml(fallback)}" style="width:100%"/>`;
   }
 }
 
@@ -198,16 +241,13 @@ function openStory() {
   const modal = document.getElementById('storyModal');
   const content = document.getElementById('storyContent');
   if (content) {
-    const title = (currentMon.translations || []).find(x => x.lang === lang)?.name || currentMon.name;
+    const title = (currentMon.translations || []).find(x => x.lang === lang)?.name || currentMon.name || '';
     const body = (currentMon.translations || []).find(x => x.lang === lang)?.history || currentMon.history || currentMon.description || '';
     content.innerHTML = `<h2>${escapeHtml(title)}</h2><div>${escapeHtml(body)}</div>`;
   }
   if (modal) modal.style.display = 'block';
   const audioUrl = currentMon.audio || null;
-  if (audioUrl) {
-    if (window.storyAudio) window.storyAudio.pause();
-    window.storyAudio = new Audio(audioUrl);
-  }
+  if (audioUrl) { if (window.storyAudio) window.storyAudio.pause(); window.storyAudio = new Audio(audioUrl); }
   const play = document.getElementById('playStory');
   const pause = document.getElementById('pauseStory');
   const downloadBtn = document.getElementById('downloadStory');
@@ -239,6 +279,7 @@ function openIdb() {
     req.onerror = () => rej(req.error);
   });
 }
+
 async function idbPut(store, obj) {
   const db = await openIdb();
   return new Promise((res, rej) => {
@@ -249,6 +290,7 @@ async function idbPut(store, obj) {
     tx.onerror = () => rej(tx.error);
   });
 }
+
 async function idbGet(store, key) {
   const db = await openIdb();
   return new Promise((res, rej) => {
@@ -446,7 +488,7 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"'`]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;' }[c]));
 }
 
-/* Initialize handlers */
+/* Initialize chat handlers early and also on window load to be safe */
 setupChatHandlers();
 
 window.addEventListener('load', () => {
@@ -454,4 +496,3 @@ window.addEventListener('load', () => {
   syncRoutes();
   setupChatHandlers();
 });
-/* --- END ENTIRE app.js --- */
