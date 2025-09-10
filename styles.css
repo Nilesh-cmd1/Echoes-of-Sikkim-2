@@ -160,7 +160,6 @@ body {
     padding: 0 1rem;
 }
 
-
 .slide-controls {
   position: absolute;
   top: 50%;
@@ -252,10 +251,7 @@ aside#list {
 
 #details {
   padding: 1.5rem;
-  /* position: absolute; */ /* Removed absolute for flow */
-  /* bottom: 0; left: 0; width: 100%; */
   background-color: var(--bg-color-light);
-  /* border-top: 1px solid var(--border-color); */
   border-bottom-left-radius: var(--border-radius-lg);
   border-bottom-right-radius: var(--border-radius-lg);
   display: none; /* Hidden by default, show when an item is selected */
@@ -348,7 +344,6 @@ aside#list {
     transform: rotate(90deg);
 }
 
-
 /* Chatbot */
 .chat-box {
   position: fixed;
@@ -417,7 +412,6 @@ aside#list {
     cursor: pointer;
     font-weight: 600;
 }
-
 
 /* Footer */
 footer {
@@ -660,9 +654,8 @@ footer {
   font-size: 14px;
   color: #333;
 }
-/* ---------- Glowing search bar (namespaced) ---------- */
-/* Append this block to the end of styles.css */
 
+/* ---------- Glowing search bar (namespaced) ---------- */
 .glow-search {
   --input-h: 56px;
   --radius: 10px;
@@ -818,27 +811,4 @@ footer {
 @media (max-width: 1024px) {
   .glow-search { max-width: 100%; }
   .glow-search__action { padding: 0 10px; }
-}
-
-/* ---------- Chatbox stacking & small layout tweaks (appended) ---------- */
-/* This ensures the static #chatbot sits above maps/pano/minimap */
-#chatbot.chat-box {
-  z-index: 6000; /* higher than other interactive elements */
-  right: 1.5rem;
-  bottom: 1.5rem;
-  max-width: 720px;
-  width: calc(100% - 3rem);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-}
-
-/* Ensure messages area reads well */
-#chatbot .chat-messages {
-  background: #fff;
-  color: #111;
-}
-
-/* Small-screen adjustments for the chatbox */
-@media (max-width: 520px) {
-  #chatbot { right: 0.5rem; left: 0.5rem; width: auto; }
-  #chatbot .chat-input-wrap { padding: 8px; }
 }
