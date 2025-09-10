@@ -1,32 +1,622 @@
-*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto;background:#f8fafc;color:#0f172a} .main-header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#fff;position:sticky;top:0;z-index:30;border-bottom:1px solid #e6edf3} .top-search{width:60%;padding:10px;border-radius:8px;border:1px solid #cbd5e1} .btn{padding:8px 10px;border-radius:8px;background:#2563eb;color:#fff;border:0;cursor:pointer} .slideshow{height:280px;background:#000;position:relative;overflow:hidden} .slides{height:100%;display:flex;transition:transform .6s ease} .slide{min-width:100%;height:100%;background-position:center;background-size:cover;display:flex;align-items:flex-end;padding:16px;color:#fff} .slide .meta{background:rgba(0,0,0,0.45);padding:12px;border-radius:8px} .slide-controls{position:absolute;left:12px;top:50%;transform:translateY(-50%);display:flex;gap:8px} .slide-controls button{background:rgba(255,255,255,0.2);border:0;color:#fff;padding:8px;border-radius:6px;cursor:pointer} main{display:grid;grid-template-columns:320px 1fr;height:calc(100vh - 364px)} aside{overflow:auto;border-right:1px solid #e5e7eb;background:#fff} #list .item{padding:12px 14px;border-bottom:1px solid #e5e7eb;cursor:pointer;display:flex;gap:10px;align-items:flex-start} #map{position:absolute;inset:0 0 40% 0} #pano{position:absolute;left:60%;right:0;top:0;bottom:40%;border-left:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb} #details{position:absolute;left:60%;right:0;bottom:0;top:60%;overflow:auto;padding:12px;background:#fff} .nearby-item{font-size:14px;padding:6px 0;border-bottom:1px dashed #e2e8f0} .events-panel{position:absolute;right:12px;top:12px;background:#fff;padding:12px;border-radius:10px;max-width:320px;box-shadow:0 6px 20px rgba(0,0,0,.08)} .gallery{position:absolute;left:12px;top:220px;right:50%;bottom:12px;overflow:auto;padding:8px;background:rgba(255,255,255,0.95);border-radius:8px} .gallery img{width:100%;border-radius:6px;margin-bottom:8px} .audio-player{margin-top:8px} .animated-card{background:#2563eb;color:#fff;padding:8px 12px;border-radius:10px;border:0;cursor:pointer;transition:transform .28s ease,box-shadow .28s ease} .animated-card:hover{transform:translateY(-6px);box-shadow:0 12px 30px rgba(2,6,23,.12)} .pannellum-container{width:100%;height:100%} .story-modal{position:fixed;left:50%;top:6%;transform:translateX(-50%);width:min(1000px,96%);max-height:78%;overflow:auto;background:#fff;border-radius:12px;padding:16px;box-shadow:0 20px 60px rgba(2,6,23,.5);z-index:1200} .close-story{position:absolute;right:12px;top:12px;border:0;background:transparent;font-weight:700;cursor:pointer} .pn-hotspot{width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,0.9);box-shadow:0 6px 20px rgba(0,0,0,.18);border:2px solid #ff6b6b} @keyframes floatUp {0%{transform:translateY(6px);opacity:0}60%{opacity:1;transform:translateY(0)}} .slide .meta{animation:floatUp .9s cubic-bezier(.2,.9,.3,1) both} #minimap-wrap{transition:box-shadow .2s} #minimap-wrap:active{box-shadow:0 10px 25px rgba(0,0,0,.4)}
-
-/* Fix overlapping buttons in panoActions */
-#panoActions {
-  display: flex;          /* line them up horizontally */
-  flex-wrap: wrap;        /* allow wrapping to next line if too many */
-  gap: 8px;               /* space between buttons */
+/* General Resets & Base Styles */
+:root {
+  --primary-color: #2563eb; /* Blue-500 */
+  --secondary-color: #1d4ed8; /* Blue-700 */
+  --accent-color: #f59e0b; /* Amber-500 */
+  --text-color-dark: #1f2937; /* Gray-800 */
+  --text-color-light: #f9fafb; /* Gray-50 */
+  --bg-color-light: #ffffff;
+  --bg-color-dark: #f3f4f6; /* Gray-100 */
+  --border-color: #e5e7eb; /* Gray-200 */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
 }
 
-#panoActions button {
-  flex: 0 0 auto;         /* keep natural button width */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
+
+body {
+  font-family: 'Inter', sans-serif;
+  line-height: 1.6;
+  color: var(--text-color-dark);
+  background-color: var(--bg-color-dark);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Header */
+.main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background-color: var(--bg-color-light);
+  box-shadow: var(--shadow-sm);
+  gap: 1rem;
+}
+
+.main-header .left {
+  display: flex;
+  align-items: center;
+}
+
+.main-header .left img {
+  height: 40px;
+  margin-right: 0.5rem;
+}
+
+.main-header .center {
+  flex-grow: 1;
+  display: flex;
+  gap: 0.5rem;
+  max-width: 600px; /* Limit search bar width */
+}
+
+.main-header .top-search {
+  flex-grow: 1;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.main-header .top-search:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+.main-header .btn {
+  padding: 0.75rem 1.25rem;
+  background-color: var(--primary-color);
+  color: var(--text-color-light);
+  border: none;
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+  white-space: nowrap; /* Prevent button text from wrapping */
+}
+
+.main-header .btn:hover {
+  background-color: var(--secondary-color);
+  transform: translateY(-1px);
+}
+
+.main-header .btn:active {
+  transform: translateY(0);
+}
+
+.main-header .lang-switch {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  background-color: var(--bg-color-light);
+  font-size: 1rem;
+  cursor: pointer;
+  outline: none;
+}
+
+/* Slideshow Section */
+.slideshow {
+  position: relative;
+  width: 100%;
+  height: 400px; /* Adjust as needed */
+  overflow: hidden;
+  background-color: #ccc; /* Placeholder background */
+}
+
+.slides {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.5s ease-in-out;
+}
+
 .slide {
-  min-width:100%;
-  height:100%;
-  background-position:center;
-  background-size:cover;
-  /* If you want a default background image: */
-  background-image: url("./https://www.google.com/url?sa=i&url=https%3A%2F%2Faapnasafar.com%2Flocation%2Fsikkim%2F&psig=AOvVaw1_f4RXVwDdJA6fePGSVHY2&ust=1757574324909000&source=images&cd=vfe&opi=89978449&ved=0CBIQjRxqFwoTCNiiytvQzY8DFQAAAAAdAAAAABAL");
+  min-width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-color-light);
+  font-size: 2.5rem;
+  font-weight: 800;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+  position: relative;
 }
 
-/* Chat box styles */
-#chatbot.chat-box {
+.slide::before { /* Overlay for better text readability */
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.slide h2 {
+    z-index: 1;
+    text-align: center;
+    padding: 0 1rem;
+}
+
+
+.slide-controls {
+  position: absolute;
+  top: 50%;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  transform: translateY(-50%);
+  padding: 0 1rem;
+  z-index: 10;
+}
+
+.slide-controls button {
+  background-color: rgba(0, 0, 0, 0.5);
+  color: var(--text-color-light);
+  border: none;
+  padding: 0.8rem 1.2rem;
+  font-size: 1.5rem;
+  cursor: pointer;
+  border-radius: var(--border-radius-md);
+  transition: background-color 0.2s ease-in-out;
+}
+
+.slide-controls button:hover {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+/* Main Content Layout */
+main {
+  display: flex;
+  flex: 1; /* Allows main to grow and take available space */
+  padding: 1.5rem;
+  gap: 1.5rem;
+}
+
+aside#list {
+  flex: 0 0 280px; /* Fixed width sidebar, adjust as needed */
+  background-color: var(--bg-color-light);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 1.5rem;
+  overflow-y: auto; /* Scrollable if content exceeds height */
+  max-height: calc(100vh - 200px); /* Example: Adjust based on header/footer */
+}
+
+.map-wrap {
+  flex: 1; /* Map section takes remaining space */
+  background-color: var(--bg-color-light);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-md);
+  position: relative; /* For absolute positioning of sub-elements */
+  overflow: hidden; /* Ensure minimap doesn't overflow when resizing */
+  min-height: 600px; /* Minimum height for map area */
+  display: flex; /* Allow content inside to flex */
+  flex-direction: column;
+}
+
+/* Map specific styling */
+#map {
+  width: 100%;
+  height: 300px; /* Example height for map */
+  background-color: #e0e7ff; /* Light blue placeholder for map */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: var(--secondary-color);
+  font-weight: 600;
+  border-top-left-radius: var(--border-radius-lg);
+  border-top-right-radius: var(--border-radius-lg);
+}
+
+#pannellum-container {
+    background-color: #d1d5db; /* Gray placeholder for pano */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: var(--text-color-dark);
+    font-weight: 600;
+}
+
+#pano {
+    border-bottom-left-radius: var(--border-radius-lg);
+    border-bottom-right-radius: var(--border-radius-lg);
+    overflow: hidden; /* Ensures pannellum content stays within bounds */
+    height: 420px; /* Adjust as needed */
+    flex-grow: 1; /* Allow pano to fill remaining height if map is smaller */
+}
+
+#details {
+  padding: 1.5rem;
+  /* position: absolute; */ /* Removed absolute for flow */
+  /* bottom: 0; left: 0; width: 100%; */
+  background-color: var(--bg-color-light);
+  /* border-top: 1px solid var(--border-color); */
+  border-bottom-left-radius: var(--border-radius-lg);
+  border-bottom-right-radius: var(--border-radius-lg);
+  display: none; /* Hidden by default, show when an item is selected */
+}
+
+/* Animated Cards (Buttons on Pano) */
+#panoActions {
+    position: absolute;
+    right: 1.5rem;
+    top: 1.5rem;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.animated-card {
+    background-color: rgba(var(--primary-color-rgb, 37, 99, 235), 0.9); /* Use RGBA for transparency */
+    color: var(--text-color-light);
+    border: none;
+    padding: 0.6rem 1rem;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    box-shadow: var(--shadow-md);
+    transition: all 0.2s ease-in-out;
+    backdrop-filter: blur(5px); /* Optional: blur background behind button */
+}
+
+.animated-card:hover {
+    background-color: var(--secondary-color);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: var(--shadow-lg);
+}
+
+.animated-card:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-md);
+}
+
+/* Minimap */
+#minimap-wrap {
+  background-color: var(--bg-color-light);
+  border: 2px solid var(--primary-color);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 999;
+  display: none; /* Initially hidden */
+  position: absolute; /* Already absolute in HTML */
+  resize: both;
+  overflow: hidden;
+  cursor: grab; /* Indicates draggable */
+  min-width: 100px;
+  min-height: 100px;
+  max-width: 90vw; /* Prevent it from being too wide */
+  max-height: 90vh; /* Prevent it from being too tall */
+}
+
+#minimap {
+  width: 100%;
+  height: 100%;
+  background-color: #a7f3d0; /* Light green placeholder for minimap */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  color: #059669; /* Green text */
+  font-weight: 600;
+}
+
+#minimap-toggle {
+    background-color: var(--primary-color);
+    color: var(--text-color-light);
+    border: none;
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+    box-shadow: var(--shadow-lg);
+    cursor: pointer;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
+}
+
+#minimap-toggle:hover {
+    background-color: var(--secondary-color);
+    transform: rotate(90deg);
+}
+
+
+/* Chatbot */
+.chat-box {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 320px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 6px 20px rgba(0,0,0,.2);
-  z-index: 5000; /* above header/buttons */
+  bottom: 1.5rem;
+  right: 1.5rem;
+  width: 350px;
+  height: 400px; /* Fixed height for chat box */
+  background-color: var(--bg-color-light);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Ensure content doesn't spill */
+}
+
+.chat-box > div:first-child { /* Chat header */
+  padding: 12px;
+  font-weight: bold;
+  background: var(--primary-color);
+  color: var(--text-color-light);
+  border-top-left-radius: var(--border-radius-lg);
+  border-top-right-radius: var(--border-radius-lg);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chat-box > div:first-child button {
+    background: none;
+    border: none;
+    color: var(--text-color-light);
+    font-size: 1.5rem; /* Larger close icon */
+    cursor: pointer;
+    line-height: 1; /* Align 'x' correctly */
+}
+
+.chat-box > div:nth-child(2) { /* Chat messages area */
+  padding: 12px;
+  max-height: 300px;
+  overflow-y: auto;
+  flex-grow: 1; /* Allows message area to fill space */
+}
+
+.chat-box .chat-input-wrap {
+    padding: 12px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: 8px;
+}
+
+.chat-box .chat-input-wrap input {
+    flex-grow: 1;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    outline: none;
+}
+
+.chat-box .chat-input-wrap button {
+    padding: 8px 12px;
+    background-color: var(--primary-color);
+    color: var(--text-color-light);
+    border: none;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    font-weight: 600;
+}
+
+
+/* Footer */
+footer {
+  padding: 1rem 1.5rem;
+  text-align: center;
+  color: var(--text-color-dark);
+  background-color: var(--bg-color-light);
+  border-top: 1px solid var(--border-color);
+  margin-top: auto; /* Pushes footer to the bottom */
+  box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Specific elements for placeholder lists and details */
+.monastery-list ul {
+    list-style: none;
+    padding: 0;
+}
+
+.monastery-list li {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background-color 0.1s ease-in-out;
+}
+
+.monastery-list li:hover {
+    background-color: var(--bg-color-dark);
+    border-radius: var(--border-radius-sm);
+}
+
+.monastery-list li:last-child {
+    border-bottom: none;
+}
+
+.monastery-list li img {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--border-radius-sm);
+    object-fit: cover;
+}
+
+.monastery-details h3 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.monastery-details p {
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+}
+
+.monastery-details .tags span {
+    display: inline-block;
+    background-color: #bfdbfe; /* Light blue */
+    color: #1e40af; /* Darker blue */
+    padding: 0.3rem 0.6rem;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.8rem;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Utility Classes */
+.hidden {
+  display: none !important;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+    main {
+        flex-direction: column;
+        padding: 1rem;
+        gap: 1rem;
+    }
+
+    aside#list {
+        flex: 0 0 auto; /* Allow sidebar to take full width */
+        max-height: 300px; /* Limit height for scroll */
+        width: 100%;
+        padding: 1rem;
+    }
+
+    .map-wrap {
+        min-height: 450px;
+    }
+
+    #panoActions {
+        flex-direction: row; /* Buttons stack horizontally */
+        flex-wrap: wrap; /* Allow wrapping */
+        justify-content: center;
+        position: static; /* Remove absolute positioning */
+        margin-top: 1rem; /* Add space below pano */
+        padding: 0 1.5rem;
+    }
+
+    .animated-card {
+        flex: 1 1 auto; /* Allow buttons to grow */
+        max-width: 48%; /* Two buttons per row */
+        margin: 0.25rem;
+    }
+
+    .chat-box {
+        width: 90%;
+        height: 60%;
+        left: 5%;
+        right: 5%;
+        bottom: 1rem;
+    }
+
+    .main-header .center {
+        max-width: 100%; /* Allow search to expand */
+        order: 3; /* Move search to bottom on small screens */
+        width: 100%;
+    }
+
+    .main-header {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+    }
+
+    .main-header .left, .main-header .right {
+        order: 1; /* Keep logo and right buttons at top */
+    }
+
+    .main-header .right {
+        margin-left: auto; /* Push right items to right */
+    }
+
+    .main-header .btn, .main-header .top-search, .main-header .lang-switch {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .slideshow {
+        height: 300px;
+    }
+
+    .slide h2 {
+        font-size: 1.8rem;
+    }
+
+    #minimap-toggle {
+        top: auto;
+        bottom: 1rem;
+        right: 1rem;
+        z-index: 1001; /* Ensure it's above chat if they overlap */
+    }
+
+    #minimap-wrap {
+        top: auto;
+        bottom: 60px; /* Above the minimap toggle */
+        right: 1rem;
+        width: 180px;
+        height: 180px;
+    }
+}
+
+@media (max-width: 768px) {
+    .animated-card {
+        max-width: 100%; /* One button per row */
+    }
+}
+
+@media (max-width: 480px) {
+    .main-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .main-header .left, .main-header .right, .main-header .center {
+        width: 100%;
+        margin: 0;
+    }
+    .main-header .right {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 0.5rem;
+    }
+    .main-header .btn {
+        flex-grow: 1;
+    }
+    .main-header .center {
+        margin-top: 0.5rem;
+    }
+    .main-header .top-search + .btn {
+        flex-grow: 0; /* Don't want search button to grow fully */
+    }
+
+    .slide h2 {
+        font-size: 1.5rem;
+    }
+
+    .chat-box {
+        width: 95%;
+        left: 2.5%;
+        right: 2.5%;
+    }
 }
