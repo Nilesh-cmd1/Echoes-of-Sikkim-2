@@ -19,3 +19,14 @@
   background-image: url("./https://www.google.com/url?sa=i&url=https%3A%2F%2Faapnasafar.com%2Flocation%2Fsikkim%2F&psig=AOvVaw1_f4RXVwDdJA6fePGSVHY2&ust=1757574324909000&source=images&cd=vfe&opi=89978449&ved=0CBIQjRxqFwoTCNiiytvQzY8DFQAAAAAdAAAAABAL");
 }
 
+/* Chat box styles */
+#chatbot.chat-box {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 320px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0,0,0,.2);
+  z-index: 5000; /* above header/buttons */
+}
