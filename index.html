@@ -27,10 +27,48 @@
     <header class="main-header">
       <div class="left">
         <img src="./assets/logo.png" alt="logo">
-      </div>
-      <div class="center">
-        <input id="topSearch" type="search" placeholder="Search monasteries, history, tours..." class="top-search">
-        <button id="topSearchBtn" class="btn">Search</button>
+       30     <div class="center">
+  31       <!-- Glowing search bar (namespaced to avoid conflicts) -->
+  32       <div class="glow-search">
+  33         <!-- layered frames for visual glow (purely decorative) -->
+  34         <div class="glow-search__glow" aria-hidden="true"></div>
+  35         <div class="glow-search__border" aria-hidden="true"></div>
+  36         <div class="glow-search__white" aria-hidden="true"></div>
+
+  37         <!-- main search control - input keeps original id for JS compatibility -->
+  38         <div class="glow-search__main" role="search">
+  39           <label for="topSearch" class="visually-hidden">Search</label>
+
+  40           <!-- Input (preserves id topSearch) -->
+  41           <input
+  42             id="topSearch"
+  43             name="text"
+  44             type="search"
+  45             placeholder="Search monasteries, history, tours..."
+  46             class="glow-search__input"
+  47             autocomplete="off"
+  48             aria-label="Search"
+  49           />
+
+  50           <!-- decorative masks (optional visual) -->
+  51           <div class="glow-search__input-mask" aria-hidden="true"></div>
+  52           <div class="glow-search__pink-mask" aria-hidden="true"></div>
+
+  53           <!-- search icon -->
+  54           <div class="glow-search__icon" aria-hidden="true">
+  55             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+  56               viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  57               <circle cx="11" cy="11" r="7"></circle>
+  58               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  59             </svg>
+  60           </div>
+
+  61           <!-- filter button (keeps your existing search button behavior) -->
+  62           <button id="topSearchBtn" class="glow-search__action btn" type="button">Search</button>
+  63         </div>
+  64       </div>
+  65     </div>
+
       </div>
       <div class="right">
         <button id="chatOpen" class="btn">Chat</button>
