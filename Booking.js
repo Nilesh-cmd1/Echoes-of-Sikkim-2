@@ -12,7 +12,7 @@ const bookingSchema = new mongoose.Schema(
       required: [true, 'User email is required.'],
       trim: true,
       lowercase: true,
-      match: [ /^\w+([\.-]?\w+)@\w+([\.-]?\w+)(\.\w{2,3})+$/, 'Please provide a valid email address.'],
+      match: [ /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please provide a valid email address.'],
       index: true, // Adds a database index for much faster queries by email.
     },
     monastery: {
@@ -59,7 +59,7 @@ const bookingSchema = new mongoose.Schema(
 // Creates a dynamic property that is not stored in the database.
 // Useful for creating combined or formatted fields.
 bookingSchema.virtual('bookingSummary').get(function() {
-  return ${this.serviceType} booking for ${this.userName} with status: ${this.status}.;
+  return `${this.serviceType} booking for ${this.userName} with status: ${this.status}.`;
 });
 
 //== MIDDLEWARE (HOOKS) ==//
