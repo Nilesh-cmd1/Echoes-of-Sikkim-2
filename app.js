@@ -1,3 +1,4 @@
+/* --- START ENTIRE app.js (replace your existing file with this) --- */
 let map, pano, markers = [], monasteries = [], nearbyMarkersMap = {}, currentMon = null;
 const lang = localStorage.getItem('lang') || 'en';
 
@@ -106,7 +107,6 @@ function renderDetails(m) {
 function showStreetView(m) {
   if (!window.google || !window.google.maps) return;
   if (!pano) {
-    // create pano if not present
     pano = new google.maps.StreetViewPanorama(document.getElementById('pano') || document.body, { visible: false });
   }
   const svs = new google.maps.StreetViewService();
@@ -386,7 +386,6 @@ function setupChatHandlers() {
     topSearchBtn.onclick = () => fetchMonasteries(document.getElementById('topSearch')?.value || '');
   }
 
-  // Open chat: show the existing static chatbox instead of creating a modal
   const chatOpen = document.getElementById('chatOpen');
   const chatBox = document.getElementById('chatbot');
   const chatClose = document.getElementById('chatClose');
@@ -443,17 +442,16 @@ function setupChatHandlers() {
   }
 }
 
-// helper to escape HTML (prevent injection)
 function escapeHtml(s) {
   return String(s).replace(/[&<>"'`]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;' }[c]));
 }
 
-/* Initialize chat handlers early and also on window load to be safe */
+/* Initialize handlers */
 setupChatHandlers();
 
 window.addEventListener('load', () => {
   fetchMonasteries();
   syncRoutes();
-  // ensure chat handlers attached if elements were not present earlier
   setupChatHandlers();
 });
+/* --- END ENTIRE app.js --- */
